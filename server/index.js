@@ -13,10 +13,10 @@ app.use(express.json()); //req.body
 
 app.post("/proposals", async (req, res) => {
   try {
-    const { title , ipfs , description } = req.body;
+    const { title , ipfs , description ,  } = req.body;
     const newproposal= await pool.query(
-      "INSERT INTO proposal (title,ipfs,description,total_votes) VALUES($1,$2,$3,$4) RETURNING *",
-      [title,ipfs,description,0]
+      "INSERT INTO proposal (title,ipfs,description,total_votes,total_passed) VALUES($1,$2,$3,$4,$5) RETURNING *",
+      [title,ipfs,description,0,0]
     );
 
 
@@ -57,7 +57,7 @@ app.get("/proposals/:id", async (req, res) => {
 
 app.post("/votes/:id", async (req, res) => {
     try {
-      const { voter } = req.body;
+      const { voter , vote_status } = req.body;
       const { id } = req.params;
       let result
       const vote = await pool.query(
@@ -67,8 +67,8 @@ app.post("/votes/:id", async (req, res) => {
       result = vote.rows[0]
       if(vote.rowCount==0){
       const newVote= await pool.query(
-        "INSERT INTO votes (proposal_id,voter) VALUES($1,$2) RETURNING *",
-        [id,voter]
+        "INSERT INTO votes (proposal_id,voter,vote_status) VALUES($1,$2,$3) RETURNING *",
+        [id,voter,vote_status]
       );
       result = newVote.rows[0]
       }

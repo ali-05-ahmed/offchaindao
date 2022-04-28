@@ -1,0 +1,10 @@
+{
+    "title":"vote us",
+    "description" : "finish todo Quick",
+    "ipfs":"https://ipfs.io/ipfs/QmV7EppvbVv864gxAC6EYGb7osYPkc8SbTQZubf2R6e7Pg?filename=0.png"
+}
+
+{
+    "voter":"0x2c0DeDD0218E0414564c9A4Ae7f8B51fc2644e9F",
+    "vote_status" : true
+}
