@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const pool = require("./db");
+const {stz_balance} = require('./callRaw');
+const callRaw = require("./callRaw");
 
 //middleware
 app.use(cors());
@@ -13,14 +15,22 @@ app.use(express.json()); //req.body
 
 app.post("/proposals", async (req, res) => {
   try {
-    const { title , ipfs , description ,  } = req.body;
+    const { title , ipfs , description , proposer  } = req.body;
+
+    let result = await callRaw(proposer)
+
+    if(result == "0"){
+      result = "Insufficient STZ balance"
+    }else{
+
     const newproposal= await pool.query(
       "INSERT INTO proposal (title,ipfs,description,total_votes,total_passed) VALUES($1,$2,$3,$4,$5) RETURNING *",
       [title,ipfs,description,0,0]
     );
+     result = newproposal.rows[0]
+    }
 
-
-    res.json(newproposal.rows[0]);
+    res.json(result);
     //console.log(req.body)
   } catch (err) {
     console.error(err.message);
@@ -59,7 +69,15 @@ app.post("/votes/:id", async (req, res) => {
     try {
       const { voter , vote_status } = req.body;
       const { id } = req.params;
-      let result
+      let result = await callRaw(voter)
+
+      let total_votes
+      let total_passed
+
+      if(result == "0"){
+        result = "Insufficient STZ balance"
+      }else{
+
       const vote = await pool.query(
         "SELECT voter FROM votes WHERE proposal_id = $1 AND voter = $2",
         [id,voter]
@@ -70,7 +88,35 @@ app.post("/votes/:id", async (req, res) => {
         "INSERT INTO votes (proposal_id,voter,vote_status) VALUES($1,$2,$3) RETURNING *",
         [id,voter,vote_status]
       );
+
+      total_votes = await pool.query(
+        "SELECT total_votes FROM proposal WHERE proposal_id = $1",
+        [id]
+      );
+      total_votes = total_votes.rows[0].total_votes
+      total_votes++
+
+      total_passed = await pool.query(
+        "SELECT total_passed FROM proposal WHERE proposal_id = $1",
+        [id]
+      );
+      total_passed = total_passed.rows[0].total_passed
+      total_passed++
+      
+      if(vote_status){
+        const update = await pool.query(
+          "UPDATE proposal SET total_votes = $1, total_passed= $2 WHERE proposal_id = $3;",
+          [total_votes,total_passed,id]
+        );
+      }else{
+        const update = await pool.query(
+          "UPDATE proposal SET total_votes = $1 WHERE proposal_id = $2;",
+          [total_votes,id]
+        );
+      }
+      
       result = newVote.rows[0]
+      }
       }
       res.json(result);
       //console.log(req.body)
