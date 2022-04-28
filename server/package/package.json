@@ -1,0 +1,11 @@
+{
+  "name": "@99starz/contracts-metadata",
+  "version": "1.0.0",
+  "description": "99Starz solidity contracts abis and addresses",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
